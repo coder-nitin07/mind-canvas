@@ -53,9 +53,12 @@ pids/
 # Personal Files
 project_documentation.md
 project_phases.md
+project_steps.md
 
 
 # Prisma
 # Ignore generated client (optional, but usually it's committed)
 # Uncomment the next line ONLY if you re-generate Prisma client on each build
 # prisma/generated/
+
+/generated/prisma
