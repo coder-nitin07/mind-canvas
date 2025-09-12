@@ -24,7 +24,8 @@ model User{
   // 
   boardCreated      Board[]         @relation("UserBoardsCreated")
   workspacesOwned   Workspace[]     @relation("UserWorkspacesOwned")
-  notesAuthored    Note[]          @relation("UserNotesAuthored")
+  notesAuthored     Note[]          @relation("UserNotesAuthored")
+  refreshTokens     RefreshToken[]
 }
 
 model Workspace{
@@ -67,4 +68,13 @@ model Note{
   // relations
   board  Board @relation("BoardNotes", fields: [boardId], references: [id])
   author        User            @relation("UserNotesAuthored", fields: [authorId], references: [id])
+}
+
+model RefreshToken {
+  id          Int       @id @default(autoincrement())
+  token       String    @unique
+  userId      Int
+  user        User      @relation(fields: [ userId ], references: [id])
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
 }
