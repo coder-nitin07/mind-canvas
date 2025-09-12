@@ -88,6 +88,58 @@ const login  = async (req, res)=>{
     }
 };
 
-// 
+// refreshAccessToken
+const refreshAccessToken = async (req, res)=>{
+    try {
+        const { refreshToken } = req.body;
+        if(!refreshToken){
+            return res.status(400).json({ message: 'Refresh Token required' });
+        }
 
-module.exports = { register, login };
+        // Check token exists in DB and not expired
+        const storedToken = await prisma.refreshToken.findUnique({
+            where: { token: refreshToken }
+        });
+        if(!storedToken || storedToken.expiresAt < new Date()){
+            return res.status(401).json({ message: 'Invalid or expired refresh token' });
+        }
+
+        // verify refresh token signature
+        const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+
+        
+        //  Generate New Access Token
+        const accessToken = jwt.sign(
+            { userId: decoded.userId },
+            process.env.JWT_SECRET,
+            { expiresIn: '15m' }
+        );
+
+        res.json({ accessToken });
+    } catch (err) {
+        console.log('Server Error', err);
+        res.status(401).json({ message: 'Invalid or Expired refresh Token' });
+    }
+};
+
+
+// logout API
+const logout = async (req, res)=>{
+    try {
+        const { refreshToken } = req.body;
+        if(!refreshToken){
+            return res.status(400).json({ message: 'Refresh token required' });
+        }
+
+        await prisma.refreshToken.deleteMany({
+            where: { token: refreshToken }
+        });
+
+        res.json({ message: 'Logged Out Sucessfully' });
+    } catch (err) {
+        console.log('Server Error', err);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+
+module.exports = { register, login, refreshAccessToken, logout };
