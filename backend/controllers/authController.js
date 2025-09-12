@@ -1,6 +1,7 @@
 const prisma = require('../config/prisma');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const generateTokens = require('../utils/generateTokens');
 
 // register api
 const register = async (req, res)=>{
@@ -25,16 +26,22 @@ const register = async (req, res)=>{
                 password: hashedPassword
             }
         });
+
+        const { accessToken, refreshToken } = generateTokens(user);
+
+        // Store token with their expiry
+        await prisma.refreshToken.create({
+            data: {
+                token: refreshToken,
+                userId: user.id,
+
+                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+            }
+        });
         
         const { password: _password, ...newUser } = user;
-       
-        const token = jwt.sign(
-            { userId: user.id, email: user.email },
-            process.env.JWT_SECRET,
-            { expiresIn: '1h' }
-        );
 
-        res.status(201).json({ message: 'User Created Successfully', user:newUser, token });
+        res.status(201).json({ message: 'User Created Successfully', user:newUser, accessToken, refreshToken });
     } catch (err) {
         console.log('Server error', err);
         res.status(500).json({ message: 'Something went wrong' });
