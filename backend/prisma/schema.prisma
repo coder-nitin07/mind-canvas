@@ -24,6 +24,7 @@ model User{
   // 
   boardCreated      Board[]         @relation("UserBoardsCreated")
   workspacesOwned   Workspace[]     @relation("UserWorkspacesOwned")
+  notesAuthored    Note[]          @relation("UserNotesAuthored")
 }
 
 model Workspace{
@@ -51,4 +52,19 @@ model Board{
   // relations
   workspace     Workspace       @relation(fields: [ workspaceId ], references: [ id ])
   createdBy     User            @relation("UserBoardsCreated", fields: [ createdById ], references: [ id ])
+  notes         Note[]          @relation("BoardNotes")
+}
+
+model Note{
+  id            String          @id @default(cuid())
+  title         String
+  content       String
+  boardId       String
+  authorId      Int
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  // relations
+  board  Board @relation("BoardNotes", fields: [boardId], references: [id])
+  author        User            @relation("UserNotesAuthored", fields: [authorId], references: [id])
 }
