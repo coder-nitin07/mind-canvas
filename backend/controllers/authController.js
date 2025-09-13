@@ -27,17 +27,17 @@ const register = async (req, res)=>{
             }
         });
 
-        const { accessToken, refreshToken } = generateTokens(user);
+        const { accessToken, refreshToken } = await generateTokens(user);
 
         // Store token with their expiry
-        await prisma.refreshToken.create({
-            data: {
-                token: refreshToken,
-                userId: user.id,
+        // await prisma.refreshToken.create({
+        //     data: {
+        //         token: refreshToken,
+        //         userId: user.id,
 
-                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-            }
-        });
+        //         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        //     }
+        // });
         
         const { password: _password, ...newUser } = user;
 
@@ -69,17 +69,17 @@ const login  = async (req, res)=>{
 
         const { password: _password, ...userData } = User;
 
-        const { accessToken, refreshToken } = generateTokens(User);
+        const { accessToken, refreshToken } = await generateTokens(User);
 
         // Store token with their expiry
-        await prisma.refreshToken.create({
-            data: {
-                token: refreshToken,
-                userId: User.id,
+        // await prisma.refreshToken.create({
+        //     data: {
+        //         token: refreshToken,
+        //         userId: User.id,
 
-                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-            }
-        });
+        //         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        //     }
+        // });
 
         res.status(200).json({ message: 'User Login Successfully', user: userData, accessToken, refreshToken });
     } catch (err) {
