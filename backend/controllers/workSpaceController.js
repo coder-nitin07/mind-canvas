@@ -127,4 +127,51 @@ const getUserWorkSpace = async (req, res) => {
     }
 };
 
-module.exports = { createWorkSpace, getWorkSpace, getUserWorkSpace };
+// Update WorkSpace Info
+const updateWorkSpace = async (req, res)=>{
+    try {
+        const { name, description } = req.body;
+        const workSpaceId = req.params.id;
+        const userId = req.user.userId;
+
+        if(!workSpaceId){
+            return res.status(404).json({ message: 'WorkSpace ID not found' });
+        }
+
+        // Fetch WorkSpace to check the Owner
+        const workSpace = await prisma.workspace.findUnique({
+            where: { id: workSpaceId },
+            select: { ownerId: true }
+        });
+        
+        if(!workSpace){
+            return res.status(404).json({ message: 'WorkSpace not found' });
+        }
+
+        // only owner can update
+        if(workSpace.ownerId !== userId){
+            return res.status(403).json({ message: 'You are not authorized to update this WorkSpace' });
+        }
+
+        // Get data for Update
+        const updatedData = {};
+        if(name) updatedData.name = name;
+        if(description) updatedData.description = description;
+
+        if(Object.keys(updatedData).length === 0){
+            return res.status(400).json({ message: 'No valid fields provided for updated' });
+        }
+
+        const updatedWorkSpace = await prisma.workspace.update({
+            where: { id: workSpaceId },
+            data: updatedData
+        });
+
+        res.status(200).json({ message: 'WorkSpace Updated Successfully', updatedWorkSpace });
+    } catch (err) {
+        console.log("Server Error", err);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+
+module.exports = { createWorkSpace, getWorkSpace, getUserWorkSpace, updateWorkSpace };
