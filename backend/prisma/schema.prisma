@@ -12,69 +12,86 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id               Int              @id @default(autoincrement())
+  name             String
+  email            String           @unique
+  password         String
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
-model User{
-  id            Int             @id @default(autoincrement())
-  name          String
-  email         String          @unique
-  password      String
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-
-  // 
-  boardCreated      Board[]         @relation("UserBoardsCreated")
-  workspacesOwned   Workspace[]     @relation("UserWorkspacesOwned")
-  notesAuthored     Note[]          @relation("UserNotesAuthored")
-  refreshTokens     RefreshToken[]
+  boardCreated     Board[]          @relation("UserBoardsCreated")
+  workspacesOwned  Workspace[]      @relation("UserWorkspacesOwned")
+  notesAuthored    Note[]           @relation("UserNotesAuthored")
+  refreshTokens    RefreshToken[]
+  workspaceMembers WorkspaceMember[]
 }
 
-model Workspace{
-  id            String          @id @default(cuid())
-  name          String
-  description   String?
-  ownerId       Int
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+model Workspace {
+  id          String            @id @default(cuid())
+  name        String
+  description String?
+  ownerId     Int
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 
-  // relations
-  owner         User            @relation("UserWorkspacesOwned", fields: [ ownerId ], references: [ id ])
-  boards        Board[]
+  owner       User              @relation("UserWorkspacesOwned", fields: [ownerId], references: [id])
+  boards      Board[]
+  members     WorkspaceMember[]
 }
 
-model Board{
+model WorkspaceMember {
   id            String          @id @default(cuid())
-  title         String          
+  userId        Int
+  workspaceId   String
+  role          Role
+  joinedAt      DateTime        @default(now())
+
+  user          User            @relation(fields: [userId], references: [id])
+  workspace     Workspace       @relation(fields: [workspaceId], references: [id])
+
+  @@unique([userId, workspaceId])  // optional but recommended
+}
+
+model Board {
+  id            String          @id @default(cuid())
+  title         String
   description   String?
-  workspaceId   String          
-  createdById   Int         
+  workspaceId   String
+  createdById   Int
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
-  // relations
-  workspace     Workspace       @relation(fields: [ workspaceId ], references: [ id ])
-  createdBy     User            @relation("UserBoardsCreated", fields: [ createdById ], references: [ id ])
+  workspace     Workspace       @relation(fields: [workspaceId], references: [id])
+  createdBy     User            @relation("UserBoardsCreated", fields: [createdById], references: [id])
   notes         Note[]          @relation("BoardNotes")
 }
 
-model Note{
+model Note {
   id            String          @id @default(cuid())
-  title         String
+  // title       String?         // keep only if you want a label
   content       String
   boardId       String
   authorId      Int
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
-  // relations
-  board  Board @relation("BoardNotes", fields: [boardId], references: [id])
+  board         Board           @relation("BoardNotes", fields: [boardId], references: [id])
   author        User            @relation("UserNotesAuthored", fields: [authorId], references: [id])
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  EDITOR
+  VIEWER
 }
 
 model RefreshToken {
   id          Int       @id @default(autoincrement())
   token       String    @unique
   userId      Int
-  user        User      @relation(fields: [ userId ], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
   createdAt   DateTime  @default(now())
   expiresAt   DateTime
 }
