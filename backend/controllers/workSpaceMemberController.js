@@ -59,7 +59,7 @@ const addMemebersInWorkSpace = async (req, res) => {
     }
 };
 
-// Get All Memebers of a WorkSpace
+// Get All Members of a WorkSpace
 const getAllMembers = async (req, res) => {
     try {
         const { id: workspaceId } = req.params;
@@ -91,11 +91,6 @@ const updateMemberRole = async (req, res)=>{
             return res.status(400).json({ message: 'Role is required' });
         }
 
-        // Check if requesting user is OWNER or ADMIN
-        const requester = await prisma.workspaceMember.findUnique({
-            where: { id: memberId }, // or find the workspaceMember of requesting user
-        });
-
         // OPTIONAL: You may fetch the requesting user's role in workspace
         const requesterRole = await prisma.workspaceMember.findFirst({
             where: { workspaceId: workSpaceId, userId },
@@ -105,7 +100,7 @@ const updateMemberRole = async (req, res)=>{
         }
 
         const updatedMember = await prisma.workspaceMember.update({
-            where: { id: memberId }, // must be unique
+            where: { id: memberId },
             data: { role }
         });
 
