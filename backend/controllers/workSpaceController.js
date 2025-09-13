@@ -128,14 +128,14 @@ const getUserWorkSpace = async (req, res) => {
 };
 
 // Update WorkSpace Info
-const updateWorkSpace = async (req, res)=>{
+const updateWorkSpace = async (req, res) => {
     try {
         const { name, description } = req.body;
         const workSpaceId = req.params.id;
         const userId = req.user.userId;
 
-        if(!workSpaceId){
-            return res.status(404).json({ message: 'WorkSpace ID not found' });
+        if (!workSpaceId) {
+            return res.status(400).json({ message: 'WorkSpace ID not found' });
         }
 
         // Fetch WorkSpace to check the Owner
@@ -143,22 +143,22 @@ const updateWorkSpace = async (req, res)=>{
             where: { id: workSpaceId },
             select: { ownerId: true }
         });
-        
-        if(!workSpace){
+
+        if (!workSpace) {
             return res.status(404).json({ message: 'WorkSpace not found' });
         }
 
         // only owner can update
-        if(workSpace.ownerId !== userId){
+        if (workSpace.ownerId !== userId) {
             return res.status(403).json({ message: 'You are not authorized to update this WorkSpace' });
         }
 
         // Get data for Update
         const updatedData = {};
-        if(name) updatedData.name = name;
-        if(description) updatedData.description = description;
+        if (name) updatedData.name = name;
+        if (description) updatedData.description = description;
 
-        if(Object.keys(updatedData).length === 0){
+        if (Object.keys(updatedData).length === 0) {
             return res.status(400).json({ message: 'No valid fields provided for updated' });
         }
 
@@ -174,4 +174,51 @@ const updateWorkSpace = async (req, res)=>{
     }
 };
 
-module.exports = { createWorkSpace, getWorkSpace, getUserWorkSpace, updateWorkSpace };
+// delete WorkSpace
+const deleteWorkSpace = async (req, res) => {
+    try {
+        const workSpaceId = req.params.id;
+        const userId = req.user.userId;
+
+        if (!workSpaceId) {
+            return res.status(400).json({ message: 'WorkSpace ID is required' });
+        }
+
+        // Fetch WorkSpace to check the Owner
+        const workSpace = await prisma.workspace.findUnique({
+            where: { id: workSpaceId },
+            select: { ownerId: true }
+        });
+
+        if (!workSpace) {
+            return res.status(404).json({ message: 'WorkSpace not found' });
+        }
+
+        // only owner can update
+        if (workSpace.ownerId !== userId) {
+            return res.status(403).json({ message: 'You are not authorized to delete this WorkSpace' });
+        }
+
+        const delelteWorkSpace = await prisma.$transaction(async (tx) => {
+            // Delete all members of the workspace
+            await tx.workspaceMember.deleteMany({
+                where: { workspaceId: workSpaceId }
+            });
+
+            // (Optional) If you also have boards/notes tied to this workspace,
+            // delete them here in the correct order.
+
+            // Delete the workspace itself
+            await tx.workspace.delete({
+                where: { id: workSpaceId }
+            });
+        });
+
+        res.status(200).json({ message: 'WorkSpace Deleted Successfully', workSpace: delelteWorkSpace });
+    } catch (err) {
+        console.log("Server Error", err);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+
+module.exports = { createWorkSpace, getWorkSpace, getUserWorkSpace, updateWorkSpace, deleteWorkSpace };
