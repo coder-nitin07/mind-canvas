@@ -1,23 +1,23 @@
 const prisma = require('../config/prisma');
 
 // create workspace
-const createWorkSpace = async (req, res)=>{
+const createWorkSpace = async (req, res) => {
     try {
         const { name, description } = req.body;
-        if(!name){
-            return res.status(400).json({ 
+        if (!name) {
+            return res.status(400).json({
                 success: false,
-                message: 'Please filled all the required fields' 
+                message: 'Please filled all the required fields'
             });
         }
 
         const userId = req.user?.userId;
-        if (!userId){
+        if (!userId) {
             return res.status(401).json({ message: 'User not found in token' });
         }
 
         // crete workspace and add owner as creator
-        const result = await prisma.$transaction(async (tx)=>{
+        const result = await prisma.$transaction(async (tx) => {
             const workspace = await tx.workspace.create({
                 data: {
                     name,
@@ -37,7 +37,7 @@ const createWorkSpace = async (req, res)=>{
             return workspace
         });
 
-        res.status(201).json({ 
+        res.status(201).json({
             success: true,
             message: 'WorkSpace created Successfully',
             data: result
@@ -49,20 +49,20 @@ const createWorkSpace = async (req, res)=>{
 };
 
 // Get WorkSpace Details
-const getWorkSpace = async (req, res)=>{
+const getWorkSpace = async (req, res) => {
     try {
         const workSpaceId = req.params.id;
-        
+
         const workSpace = await prisma.workspace.findUnique({
             where: { id: workSpaceId },
             include: {
                 owner: true,
-                members: { include: { user:true } },
+                members: { include: { user: true } },
                 boards: true
             }
         });
 
-        if(!workSpace){
+        if (!workSpace) {
             return res.status(404).json({ message: 'WorkSpace not found' });
         }
 
@@ -73,4 +73,58 @@ const getWorkSpace = async (req, res)=>{
     }
 };
 
-module.exports = { createWorkSpace, getWorkSpace };
+// List User WorkSpace
+const getUserWorkSpace = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        if (!userId) {
+            return res.status(404).json({ message: 'User not found in token' });
+        }
+
+        const workSpace = await prisma.workspace.findMany({
+            where: {
+                OR: [
+                    { ownerId: userId },
+                    { members: { some: { userId } } }
+                ]
+            },
+            select: {
+                id: true,
+                name: true,
+                description: true,
+                owner: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                members: {
+                    select: {
+                        id: true,
+                        role: true,
+                        user: {
+                            select: {
+                                id: true,
+                                name: true
+                            }
+                        }
+                    }
+                },
+                boards: {
+                    select: {
+                        id: true,
+                        title: true,
+                        description: true
+                    }
+                }
+            }
+        });
+
+        res.status(200).json({ message: "Fetched User's Workspaces", workSpace });
+    } catch (err) {
+        console.log("Server Error", err);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+
+module.exports = { createWorkSpace, getWorkSpace, getUserWorkSpace };
