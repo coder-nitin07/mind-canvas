@@ -111,4 +111,44 @@ const updateMemberRole = async (req, res)=>{
     }
 };
 
-module.exports = { addMemebersInWorkSpace, getAllMembers, updateMemberRole };
+// Remove a Member
+const removedMember = async (req, res)=>{
+    try {
+        const { workSpaceId, memberId } = req.params;
+        const userId = req.user.userId;
+
+        const workSpace = await prisma.workspace.findUnique({
+            where: { id: workSpaceId },
+            select: { ownerId: true }
+        });
+
+        if(!workSpace){
+            return res.status(404).json({ message: 'WorkSpace not found' });
+        }
+
+        // only owner can remove members
+        if (workSpace.ownerId !== userId) {
+            return res.status(403).json({ message: 'You are not authorized to remove Members in this WorkSpace' });
+        }       
+
+        // check the member exist in the workSpace
+        const getMember = await prisma.workspaceMember.findUnique({
+            where: { id : memberId, workspaceId: workSpaceId }
+        });
+
+        if(!getMember){
+            return res.status(404).json({ message: 'Member not found' });
+        }
+
+        const deletedMember = await prisma.workspaceMember.delete({
+            where: { id: memberId }
+        });
+
+        res.status(200).json({ message: 'Member Removed Successfully', deletedMember });
+    } catch (err) {
+        console.log("Server Error", err);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+
+module.exports = { addMemebersInWorkSpace, getAllMembers, updateMemberRole, removedMember };
