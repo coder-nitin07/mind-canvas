@@ -79,4 +79,41 @@ const getAllMembers = async (req, res) => {
     }
 };
 
-module.exports = { addMemebersInWorkSpace, getAllMembers };
+// Change a Members role
+const updateMemberRole = async (req, res)=>{
+    try {
+        const workSpaceId = req.params.workSpaceId;
+        const memberId = req.params.memberId;
+        const userId = req.user.userId;
+        const { role } = req.body;
+
+        if (!role) {
+            return res.status(400).json({ message: 'Role is required' });
+        }
+
+        // Check if requesting user is OWNER or ADMIN
+        const requester = await prisma.workspaceMember.findUnique({
+            where: { id: memberId }, // or find the workspaceMember of requesting user
+        });
+
+        // OPTIONAL: You may fetch the requesting user's role in workspace
+        const requesterRole = await prisma.workspaceMember.findFirst({
+            where: { workspaceId: workSpaceId, userId },
+        });
+        if (!requesterRole || (requesterRole.role !== 'OWNER' && requesterRole.role !== 'ADMIN')) {
+            return res.status(403).json({ message: 'You are not authorized to change member roles' });
+        }
+
+        const updatedMember = await prisma.workspaceMember.update({
+            where: { id: memberId }, // must be unique
+            data: { role }
+        });
+
+        res.status(200).json({ message: 'Member role updated successfully', member: updatedMember });
+    } catch (err) {
+        console.log("Server Error", err);
+        res.status(500).json({ message: 'Somethng went wrong' });
+    }
+};
+
+module.exports = { addMemebersInWorkSpace, getAllMembers, updateMemberRole };
