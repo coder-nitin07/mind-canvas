@@ -45,4 +45,38 @@ const createNote = async (req, res)=>{
     }
 };
 
+// Get a note
+const getNoteDetails = async (req, res)=>{
+    try {
+        const noteId = req.params.noteId;
+        if(!noteId){
+            return res.status(400).json({ message: 'NoteId is required' });
+        }
+
+        const getNote = await prisma.note.findUnique({
+            where: {
+                id: noteId
+            }
+        });
+        if(!getNote){
+            return res.status(404).json({ message: 'Note not found' });
+        }
+
+        const isMember = await prisma.workspaceMember.findFirst({
+            where: {
+                workspaceId: getNote.workspaceId,
+                userId: req.user.userId
+            }
+        });
+        if(!isMember){
+            return res.status(403).json({ message: 'You are not a member of this workspace' });
+        }
+
+        res.status(200).json({ message: 'Note Fetched Successfully', note: getNote });
+    } catch (err) {
+        console.log('Server Error', err);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+
 module.exports = { createNote, getNoteDetails };
