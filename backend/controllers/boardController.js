@@ -44,4 +44,23 @@ const createBoard = async (req, res)=>{
     }
 };
 
-module.exports = { createBoard };
+// Get details of Board
+const getBoardDetails = async (req, res)=>{
+    try {
+        const boardId = req.params.boardId;
+        if(!boardId){
+            return res.status(404).json({ message: 'BoardId is required' });
+        }
+
+        const getBoard = await prisma.board.findUnique({
+            where: { id: boardId }
+        });
+
+        res.status(200).json({ message: 'Board Fetched Successfully', board: getBoard });
+    } catch (err) {
+        console.log("Server Error", err);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+
+module.exports = { createBoard, getBoardDetails };

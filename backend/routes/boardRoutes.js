@@ -4,5 +4,6 @@ const { createBoard, getBoardDetails } = require('../controllers/boardController
 const boardRouter = express.Router();
 
 boardRouter.post('/create/:workSpaceId', authMiddleware, createBoard);
+boardRouter.get('/:boardId', authMiddleware, getBoardDetails);
 
 module.exports = { boardRouter };
