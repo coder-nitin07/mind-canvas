@@ -172,4 +172,47 @@ const updateNote = async (req, res)=>{
     }
 };
 
-module.exports = { createNote, getNoteDetails, getAllNotes, updateNote };
+
+// Delete a Note
+const deleteNote = async (req, res)=>{
+    try {
+        const noteId = req.params.noteId;
+        if(!noteId){
+            return res.status(400).json({ message: 'NoteId is required' });
+        }
+
+        // check note exist
+        const getNote = await prisma.note.findUnique({
+            where: {
+                id: noteId
+            },
+            include: { board: true }
+        });
+        if(!getNote){
+            return res.status(404).json({ message: 'Note not found' });
+        }
+
+        // check the User member of workSpace
+        const isMember = await prisma.workspaceMember.findFirst({
+            where: {
+                workspaceId: getNote.board.workspaceId,
+                userId: req.user.userId
+            }
+        });
+        if(!isMember || !['OWNER', 'ADMIN', 'EDITOR'].includes(isMember.role)){
+            return res.status(404).json({ message: 'You are not authorized to Delete the Notes.' });
+        }
+
+        // delete note
+        const deletedNote = await prisma.note.delete({
+            where: { id: noteId }
+        });
+
+        res.status(200).json({ message: 'Note Deleted Successfully', note: deletedNote })
+    } catch (err) {
+        console.log("Server Error", err);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+
+module.exports = { createNote, getNoteDetails, getAllNotes, updateNote, deleteNote };
