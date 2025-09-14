@@ -118,4 +118,57 @@ const getAllBoards = async (req, res)=>{
     }
 };
 
-module.exports = { createBoard, getBoardDetails, getAllBoards };
+// Update Board
+const updateBoard = async (req, res)=>{
+    try {
+        const { title, description } = req.body;
+        const boardId = req.params.boardId;
+        
+        if(!boardId){
+            return res.status(404).json({ message: 'BoardId required' });
+        }
+
+        const getBoard = await prisma.board.findUnique({
+            where: { id: boardId }
+        });
+        if(!getBoard){
+            return res.status(404).json({ message: 'Board not found' });
+        }
+
+        const isMember = await prisma.workspaceMember.findFirst({
+            where: {
+                workspaceId: getBoard.workspaceId,
+                userId: req.user.userId
+            }
+        });
+
+        if(!isMember || (isMember.role !== 'OWNER' && isMember.role !== 'ADMIN')){
+            return res.status(403).json({ message: 'You are not authorized to update the Board.' });
+        }
+
+        const updatedBoard = await prisma.board.update({
+            where: { id: boardId },
+            data: {
+                title,
+                description
+            }
+        });
+
+        res.status(200).json({ message: 'Board Updated Successfully', board: updatedBoard });
+    } catch (err) {
+        console.log("Server Error", err);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+
+// Delete Board
+const deleteBoard = async (req, res)=>{
+    try {
+        
+    } catch (err) {
+        console.log("Server Error", err);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+
+module.exports = { createBoard, getBoardDetails, getAllBoards, updateBoard };
