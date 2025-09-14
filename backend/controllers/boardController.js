@@ -164,11 +164,39 @@ const updateBoard = async (req, res)=>{
 // Delete Board
 const deleteBoard = async (req, res)=>{
     try {
-        
+        const boardId = req.params.boardId;
+        if(!boardId){
+            return res.status(404).json({ message: 'BoardId is required' });
+        }
+
+        const getBoard = await prisma.board.findFirst({
+            where: { id: boardId }
+        });
+        if(!getBoard){
+             return res.status(404).json({ message: 'Board not found' });
+        }
+
+        const isMember = await prisma.workspaceMember.findFirst({
+            where: {
+                workspaceId: getBoard.workspaceId,
+                userId: req.user.userId
+            }
+        });
+        if(!isMember || (isMember.role !== 'OWNER' && isMember.role !== 'ADMIN')){
+            return res.status(403).json({ message: 'You are not authorized to delete the Board.' });
+        }
+
+        const deletedBoard = await prisma.board.delete({
+            where: {
+                id: boardId
+            }
+        });
+
+        res.status(200).json({ message: 'Board Deleted Successfully', board: deletedBoard });
     } catch (err) {
         console.log("Server Error", err);
         res.status(500).json({ message: 'Something went wrong' });
     }
 };
 
-module.exports = { createBoard, getBoardDetails, getAllBoards, updateBoard };
+module.exports = { createBoard, getBoardDetails, getAllBoards, updateBoard, deleteBoard };
