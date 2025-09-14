@@ -4,6 +4,7 @@ const prisma = require('./config/prisma');
 const { authRouter } = require('./routes/authRoutes');
 const { workSpaceRouter } = require('./routes/workSpaceRoutes');
 const { workSpaceMembersRouter } = require('./routes/workSpaceMemberRoutes');
+const { boardRouter } = require('./routes/boardRoutes');
 require('dotenv').config();
 
 app.use(express.json());
@@ -21,6 +22,7 @@ app.use(express.json());
 app.use('/auth', authRouter);
 app.use('/workSpace', workSpaceRouter);
 app.use('/workSpaceMembers', workSpaceMembersRouter);
+app.use('/board', boardRouter);
 
 app.get('/', (req, res) => {
     res.send('MindCanvas Project Working');
