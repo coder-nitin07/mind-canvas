@@ -117,6 +117,15 @@ const removedMember = async (req, res)=>{
         const { workSpaceId, memberId } = req.params;
         const userId = req.user.userId;
 
+        // Get the requested user role
+        const requester = await prisma.workspaceMember.findFirst({
+            where: { workspaceId, userId }
+        });
+
+        if(!requester || (requester.role !== 'OWNER' && requester.role !== 'ADMIN')){
+            return res.status(403).json({ message: 'You are not authorized to remove members in this workspace' });
+        }
+
         const workSpace = await prisma.workspace.findUnique({
             where: { id: workSpaceId },
             select: { ownerId: true }
@@ -124,20 +133,20 @@ const removedMember = async (req, res)=>{
 
         if(!workSpace){
             return res.status(404).json({ message: 'WorkSpace not found' });
-        }
-
-        // only owner can remove members
-        if (workSpace.ownerId !== userId) {
-            return res.status(403).json({ message: 'You are not authorized to remove Members in this WorkSpace' });
-        }       
+        }   
 
         // check the member exist in the workSpace
-        const getMember = await prisma.workspaceMember.findUnique({
+        const getMember = await prisma.workspaceMember.findFirst({
             where: { id : memberId, workspaceId: workSpaceId }
         });
 
         if(!getMember){
             return res.status(404).json({ message: 'Member not found' });
+        }
+
+        // Cannot remove the Owner of the WorkSpace
+        if(getMember.userId === workSpace.ownerId){
+            return res.status(403).json({ message: 'Cannot remove the owner of the workspace' });
         }
 
         const deletedMember = await prisma.workspaceMember.delete({
