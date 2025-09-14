@@ -79,4 +79,47 @@ const getNoteDetails = async (req, res)=>{
     }
 };
 
-module.exports = { createNote, getNoteDetails };
+// Get All Notes Of a Board
+const getAllNotes = async (req, res)=>{
+    try {
+        const boardId = req.params.boardId;
+        if(!boardId){
+            return res.status(400).json({ message: 'BoardId is required' });
+        }
+
+        // check board exist
+        const board = await prisma.board.findUnique({
+            where: { id: boardId },
+        });
+        if (!board) {
+            return res.status(404).json({ message: 'Board not found' });
+        }
+
+        // check user part of the workspace
+        const isMember = await prisma.workspaceMember.findFirst({
+            where: {
+                workspaceId: getNotes.workspaceId,
+                userId: req.user.userId
+            }
+        });
+        if(!isMember){
+            return res.status(403).json({ message: 'You are not authorized to view these Notes.' });
+        }
+
+         const getNotes = await prisma.note.findMany({
+            where: {
+                boardId
+            }
+        });
+        if(!getNotes){
+            return res.status(404).json({ message: 'Notes not found' });
+        }
+
+        res.status(200).json({ message: 'Notes Fetched Successfully', notes: getNotes })
+    } catch (err) {
+        console.log("Server Error", err);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+
+module.exports = { createNote, getNoteDetails, getAllNotes };
