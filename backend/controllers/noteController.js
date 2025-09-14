@@ -122,4 +122,54 @@ const getAllNotes = async (req, res)=>{
     }
 };
 
-module.exports = { createNote, getNoteDetails, getAllNotes };
+// Update a Note
+const updateNote = async (req, res)=>{
+    try {
+        const { content } = req.body;
+        if(!content){
+            return res.status(400).json({ message: 'Content is required' });
+        }
+
+        const noteId = req.params.noteId;
+        if(!noteId){
+            return res.status(400).json({ message: 'NoteId is required' });
+        }
+
+        // check note exist
+        const getNote = await prisma.note.findUnique({
+            where: {
+                id: noteId
+            },
+            include: { board: true }
+        });
+        if(!getNote){
+            return res.status(404).json({ message: 'Note not found' });
+        }
+
+        // check the User member of workSpace
+        const isMember = await prisma.workspaceMember.findFirst({
+            where: {
+                workspaceId: getNote.board.workspaceId,
+                userId: req.user.userId
+            }
+        });
+        if(!isMember || !['OWNER', 'ADMIN', 'EDITOR'].includes(isMember.role)){
+            return res.status(403).json({ message: 'You are not authorized to Update the Notes.' });
+        }
+
+        // Update note
+        const updatedNote = await prisma.note.update({
+            where: { id: noteId },
+            data: {
+                content
+            }
+        });
+
+        res.status(200).json({ message: 'Note Updated Successfully', note: updatedNote })
+    } catch (err) {
+        console.log("Server Error", err);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+
+module.exports = { createNote, getNoteDetails, getAllNotes, updateNote };
