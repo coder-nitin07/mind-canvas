@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* optional: small helper for dark mode */
+:root {
+  --mc-primary: #14B8A6;
+  --mc-secondary: #8B5CF6;
+}
+
+/* example */
+body {
+  background-color: theme('colors.bg.light');
+}
