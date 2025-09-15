@@ -1,15 +1,15 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
 import './App.css'
+import Signup from './pages/Signup'
 
 function App() {
-  const [count, setCount] = useState(0)
 
   return (
-    <>
-      <h2 className='bg-red-800'>Hello</h2>
-    </>
+    <Router>
+      <Routes>
+          <Route index element={<Signup />} />
+      </Routes>
+    </Router>
   )
 }
 
