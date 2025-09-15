@@ -6,9 +6,13 @@ const { workSpaceRouter } = require('./routes/workSpaceRoutes');
 const { workSpaceMembersRouter } = require('./routes/workSpaceMemberRoutes');
 const { boardRouter } = require('./routes/boardRoutes');
 const { noteRouter } = require('./routes/noteRoutes');
+const cors = require('cors');
 require('dotenv').config();
 
 app.use(express.json());
+
+// cors 
+app.use(cors());
 
 (async ()=>{
     try {
