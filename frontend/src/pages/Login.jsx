@@ -36,7 +36,9 @@ const Login = () => {
       }
 
       // Store token for future protected routes
-      localStorage.setItem('token', data.token);
+      localStorage.setItem('token', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
+      localStorage.setItem('user', JSON.stringify(data.user));
 
       setSuccessMessage('Login successful! Redirecting...');
       setEmail('');

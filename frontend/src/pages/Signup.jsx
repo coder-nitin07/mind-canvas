@@ -37,6 +37,10 @@ const Signup = () => {
         return;
       }
 
+      localStorage.setItem('token', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
       setSuccessMessage('Account created successfully! Redirecting...');
       setName('');
       setEmail('');
