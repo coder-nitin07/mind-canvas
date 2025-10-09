@@ -2,19 +2,19 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
 const Login = () => {
-  const [ email, setEmail ] = useState('');
-  const [ password, setPassword ] = useState('');
-  const [ error, setError ] = useState('');
-  const [ isLoading, setIsLoading ] = useState(false);
-  const [ successMessage, setSuccessMessage ] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const navigate = useNavigate();
 
-  const handleSignup = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setSuccessMessage('');
 
-    // Check the simple validation 
+    // Simple frontend validation
     if (!email.includes('@') || password.length < 8) {
       setError('Please enter valid details (Email with @, Password min 8 chars)');
       return;
@@ -22,9 +22,8 @@ const Login = () => {
 
     try {
       setIsLoading(true);
-
       const baseUrl = import.meta.env.VITE_API_URL.replace(/\/$/, '');
-      const response = await fetch(`${baseUrl}/auth/register`, {
+      const response = await fetch(`${baseUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -32,11 +31,14 @@ const Login = () => {
 
       const data = await response.json();
       if (!response.ok) {
-        setError(data.message || 'Sign Up Failed');
+        setError(data.message || 'Login failed');
         return;
       }
 
-      setSuccessMessage('Account created successfully! Redirecting...');
+      // Store token for future protected routes
+      localStorage.setItem('token', data.token);
+
+      setSuccessMessage('Login successful! Redirecting...');
       setEmail('');
       setPassword('');
 
@@ -53,7 +55,7 @@ const Login = () => {
     <div className="min-h-screen bg-bg-dark flex items-center justify-center p-4">
       <div className="bg-surface-dark rounded-lg shadow-2xl p-8 w-full max-w-md border border-border-dark">
         <h2 className="text-3xl font-extrabold text-text-primary-dark mb-8 text-center">
-          Join Us Today!
+          Welcome Back!
         </h2>
 
         {error && (
@@ -68,7 +70,7 @@ const Login = () => {
           </p>
         )}
 
-        <form onSubmit={handleSignup} className="space-y-6">
+        <form onSubmit={handleLogin} className="space-y-6">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-text-secondary mb-2">
               Email Address
@@ -105,7 +107,7 @@ const Login = () => {
             disabled={isLoading}
             className="w-full bg-primary text-text-primary-dark py-3 rounded-md font-semibold text-lg hover:bg-opacity-90 transition-colors duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            { isLoading ? (
+            {isLoading ? (
               <>
                 <svg
                   className="animate-spin h-5 w-5 text-text-primary-dark"
@@ -127,18 +129,18 @@ const Login = () => {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                Login...
+                Logging in...
               </>
             ) : (
-              'Create Account'
+              'Login'
             )}
           </button>
         </form>
 
         <p className="text-center text-text-secondary text-sm mt-8">
-          Already have an account?{' '}
-          <Link to="/login" className="text-primary hover:underline font-medium">
-            Login here
+          Don’t have an account?{' '}
+          <Link to="/signup" className="text-primary hover:underline font-medium">
+            Sign up here
           </Link>
         </p>
       </div>
