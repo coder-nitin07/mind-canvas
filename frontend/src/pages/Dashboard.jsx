@@ -1,9 +1,10 @@
-import Navbar from "../components/Navbar"
+import Navbar from "../components/Navbar";
 
 const Dashboard = () => {
   const userData = localStorage.getItem("user") || "User";
-  const user = JSON.parse(userData);
-
+  
+  // parse user data
+  const user = userData ? JSON.parse(userData) : { name: "User" };
   
   return (
     <div className="min-h-screen bg-gray-100">
