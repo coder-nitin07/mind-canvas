@@ -4,6 +4,7 @@ import Signup from './pages/Signup'
 import Login from './pages/Login'
 import ProtectedRoute from './utils/ProtectedRoute'
 import Dashboard from './pages/Dashboard'
+import Workspace from './pages/Workspace'
 
 function App() {
 
@@ -19,6 +20,15 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+          />
+
+          <Route
+              path='/workspaces'
+              element={
+                <ProtectedRoute>
+                  <Workspace />
                 </ProtectedRoute>
               }
           />
