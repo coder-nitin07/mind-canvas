@@ -77,7 +77,7 @@ const Workspace = () => {
                 </p>
               ) : (
                 workspaces.map((ws) => (
-                  <WorkspaceCard key={ws.id} name={ws.name} createdAt={ws.createdAt} />
+                  <WorkspaceCard key={ ws.id } id={ ws.id } name={ ws.name } createdAt={ ws.createdAt } />
                 ))
               ) }
           </div>

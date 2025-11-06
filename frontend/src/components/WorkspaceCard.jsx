@@ -1,5 +1,11 @@
+import { useNavigate } from "react-router";
 
-const WorkspaceCard = ({ name, createdAt }) => {
+const WorkspaceCard = ({ id, name, createdAt }) => {
+  const navigate = useNavigate();
+
+  const handleOpenWorkspace = () => {
+    navigate(`/workspace/${id}/boards`, { state: { workspaceName: name } })
+  };
   return (
     <div className="g-white shadow-md rounded-xl p-5 hover:shadow-lg transition">
         <h3 className="text-xl font-semibold text-gray-800 mb-2">{ name }</h3>
@@ -8,7 +14,7 @@ const WorkspaceCard = ({ name, createdAt }) => {
             Created on { new Date(createdAt).toLocaleDateString() }
         </p>
 
-        <button className="bg-violet-600 text-white px-3 py-1.5 rounded-lg hover:bg-violet-700 transition">
+        <button onClick={ handleOpenWorkspace } className="bg-violet-600 text-white px-3 py-1.5 rounded-lg hover:bg-violet-700 transition">
             Open
         </button>
     </div>
