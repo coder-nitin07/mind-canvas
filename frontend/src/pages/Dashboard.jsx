@@ -6,7 +6,6 @@ const Dashboard = () => {
   
   // parse user data
   const user = userData ? JSON.parse(userData) : { name: "User" };
-  
   return (
      <DashboardLayout>
       <h1 className="text-3xl font-semibold text-gray-800 mb-4">
