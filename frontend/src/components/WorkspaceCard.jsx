@@ -4,7 +4,7 @@ const WorkspaceCard = ({ id, name, createdAt }) => {
   const navigate = useNavigate();
 
   const handleOpenWorkspace = () => {
-    navigate(`/workspace/${id}/boards`, { state: { workspaceName: name } })
+    navigate(`/workspace/${id}/board`, { state: { workspaceName: name } })
   };
   return (
     <div className="g-white shadow-md rounded-xl p-5 hover:shadow-lg transition">
