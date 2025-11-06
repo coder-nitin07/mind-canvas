@@ -18,8 +18,9 @@ const Board = () => {
       const fetchBoards = async () =>{
         try {
           const accessToken = localStorage.getItem('token');
+          console.log('workspace id is  :  ', id)
           const response = await axios.get(
-            `http://localhost:3000/board/getAllBoardsByWorkspace/${id}`,
+            `http://localhost:3000/board/${ id }/boards`,
             {
                 headers: { Authorization: `Bearer ${ accessToken }` }
             }

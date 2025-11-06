@@ -98,7 +98,7 @@ const getAllBoards = async (req, res)=>{
         }); 
 
         if(getBoards.length === 0){
-            return res.status(404).json({ message: 'No Boards Found' });
+            return res.status(200).json({ boards: [] });
         }
 
         const isMember = await prisma.workspaceMember.findFirst({
