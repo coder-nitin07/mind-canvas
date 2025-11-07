@@ -98,7 +98,7 @@ const getAllNotes = async (req, res)=>{
         // check user part of the workspace
         const isMember = await prisma.workspaceMember.findFirst({
             where: {
-                workspaceId: getNotes.workspaceId,
+                workspaceId: board.workspaceId,
                 userId: req.user.userId
             }
         });
@@ -111,8 +111,9 @@ const getAllNotes = async (req, res)=>{
                 boardId
             }
         });
-        if(!getNotes){
-            return res.status(404).json({ message: 'Notes not found' });
+        
+         if(getNotes.length === 0){
+            return res.status(200).json({ notes: [] });
         }
 
         res.status(200).json({ message: 'Notes Fetched Successfully', notes: getNotes })

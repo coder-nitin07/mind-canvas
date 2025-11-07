@@ -6,6 +6,7 @@ import ProtectedRoute from './utils/ProtectedRoute'
 import Dashboard from './pages/Dashboard'
 import Workspace from './pages/Workspace'
 import Board from './pages/Board'
+import BoardDetail from './pages/BoardDetail'
 
 function App() {
 
@@ -39,6 +40,15 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Board />
+                </ProtectedRoute>
+              }
+          />
+
+          <Route
+              path='/board/:boardId'
+              element={
+                <ProtectedRoute>
+                  <BoardDetail />
                 </ProtectedRoute>
               }
           />

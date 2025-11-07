@@ -1,4 +1,4 @@
-import { useLocation, useParams } from "react-router"
+import { useLocation, useNavigate, useParams } from "react-router"
 import DashboardLayout from "../layouts/DashboardLayout";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -8,6 +8,7 @@ const Board = () => {
   // Get Workspace ID
   const { id } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const workspaceName = location.state?.workspaceName || 'workspace';
   
   const [ boards, setBoards ] = useState([]);
@@ -82,6 +83,7 @@ const Board = () => {
             boards.map((board) => (
               <div 
                 key={ board.id }
+                onClick={()=> navigate(`/board/${ board.id }`) }
                 className="bg-white shadow-md rounded-xl p-5 hover:shadow-lg transition"
               >
                 <h3 className="text-xl font-semibold text-gray-800 mb-2">
@@ -90,7 +92,7 @@ const Board = () => {
 
                 <p className="text-gray-500 text-sm">
                   Created on{" "}
-                  {new Date(board.createdAt).toLocaleDateString()}
+                  { new Date(board.createdAt).toLocaleDateString() }
                 </p>
               </div>
             ))
