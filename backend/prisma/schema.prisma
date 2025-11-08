@@ -69,10 +69,11 @@ model Board {
 
 model Note {
   id            String          @id @default(cuid())
-  // title       String?         // keep only if you want a label
   content       String
   boardId       String
   authorId      Int
+  x         Float    @default(0.0)
+  y         Float    @default(0.0) 
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
