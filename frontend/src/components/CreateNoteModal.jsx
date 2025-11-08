@@ -20,6 +20,11 @@ const CreateNoteModal = ({ isOpen, onClose, onCreate }) => {
         return;
     }
 
+    if(!noteData.content.trim()){
+        alert('Note content is required');
+        return;
+    }
+
     onCreate(noteData);
     setNoteData({ title: '', content: '' });
   }

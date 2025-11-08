@@ -38,6 +38,10 @@ const createNote = async (req, res)=>{
             }
         });
 
+        // Emit socket event
+        const io = req.app.get('io');
+        io.to(boardId).emit('note_created', note);
+
         res.status(201).json({ message: 'Note Created Successfully', note });
     } catch (err) {
         console.log("Server Error", err);
@@ -166,6 +170,9 @@ const updateNote = async (req, res)=>{
             }
         });
 
+        const io = req.app.get('io');
+        io.to(updatedNote.boardId).emit('note_updated', updatedNote);
+
         res.status(200).json({ message: 'Note Updated Successfully', note: updatedNote })
     } catch (err) {
         console.log("Server Error", err);
@@ -208,6 +215,9 @@ const deleteNote = async (req, res)=>{
         const deletedNote = await prisma.note.delete({
             where: { id: noteId }
         });
+
+        const io = req.app.get('io');
+        io.to(deletedNote.boardId).emit('note_deleted', deletedNote.id);
 
         res.status(200).json({ message: 'Note Deleted Successfully', note: deletedNote })
     } catch (err) {

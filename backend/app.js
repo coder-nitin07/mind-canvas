@@ -1,4 +1,6 @@
 const express = require('express');
+const http = require('http');
+const { initializeSocket } = require('./socket');
 const app = express();
 const prisma = require('./config/prisma');
 const { authRouter } = require('./routes/authRoutes');
@@ -30,11 +32,18 @@ app.use('/workSpaceMembers', workSpaceMembersRouter);
 app.use('/board', boardRouter);
 app.use('/note', noteRouter);
 
+// create http server
+const server = http.createServer(app);
+const io = initializeSocket(server);
+
+// make io accessible in controllers if needed
+app.set('io', io);
+
 app.get('/', (req, res) => {
     res.send('MindCanvas Project Working');
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log('Server is running on PORT', PORT);
 });

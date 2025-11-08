@@ -5,33 +5,33 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import CreateNoteModal from '../components/CreateNoteModal';
 import EditNoteModal from '../components/EditNoteModal';
 import { deleteNote } from '../api/noteApi';
+import { io } from 'socket.io-client';
 
 const BoardDetail = () => {
   const { boardId } = useParams();
   const [board, setBoard] = useState(null);
+  const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [notes, setNotes] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const token = localStorage.getItem('token');
 
+  // Socket state
+  const [ socket, setSocket ] = useState(null);
+
   // Fetch board + notes
   const fetchBoardDetail = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`http://localhost:3000/board/${boardId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       setBoard(response.data.board);
-      setError('');
 
       const noteRes = await axios.get(`http://localhost:3000/note/${boardId}/notes`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       setNotes(noteRes.data.notes || []);
     } catch (err) {
       console.log('Error Fetching board : ', err);
@@ -43,20 +43,45 @@ const BoardDetail = () => {
 
   useEffect(() => {
     fetchBoardDetail();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [boardId]);
+
+  // Setup socket connection when BoardDetail mounts
+  useEffect(() => {
+    const s = io('http://localhost:3000', {
+      auth: { token },
+      query: { boardId }, // join board-specific room on server
+    });
+    setSocket(s);
+
+    // listen for server events
+    s.on('note_created', (newNote) => {
+      setNotes((prev) => [...prev, newNote]);
+    });
+
+    s.on('note_updated', (updatedNote) => {
+      setNotes((prev) =>
+        prev.map((n) => (n.id === updatedNote.id ? updatedNote : n))
+      );
+    });
+
+    s.on('note_deleted', (deletedNoteId) => {
+      setNotes((prev) => prev.filter((n) => n.id !== deletedNoteId));
+    });
+
+    // cleanup on unmount
+    return () => {
+      s.disconnect();
+    };
+  }, [boardId, token]);
 
   // Create Note
   const handleCreateNote = async (newNote) => {
     try {
-      const response = await axios.post(
-        `http://localhost:3000/note/${boardId}/create`,
-        newNote,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      setNotes([...notes, response.data.note]);
+      await axios.post(`http://localhost:3000/note/${boardId}/create`, newNote, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setIsModalOpen(false);
+      // No need to manually update notes — socket will handle it
     } catch (err) {
       console.log('Error while Creating Note ', err);
     }
@@ -72,37 +97,29 @@ const BoardDetail = () => {
   const handleDelete = async (noteId) => {
     const confirmDelete = window.confirm('Are you sure you want to delete this note?');
     if (!confirmDelete) return;
-
     try {
       await deleteNote(noteId, token);
-      // Refresh notes after deletion
-      const updated = notes.filter((n) => n.id !== noteId);
-      setNotes(updated);
+      // socket will update all clients automatically
     } catch (err) {
       console.error('Error deleting note:', err);
     }
   };
 
-  // Loading state
-  if (loading) {
+  if (loading)
     return (
       <DashboardLayout>
         <div className="p-6 text-center text-gray-500">Loading Board details...</div>
       </DashboardLayout>
     );
-  }
 
-  // Error state
-  if (error) {
+  if (error)
     return (
       <DashboardLayout>
         <div className="p-6 text-red-500">{error}</div>
       </DashboardLayout>
     );
-  }
 
-  // No board found
-  if (!board) {
+  if (!board)
     return (
       <DashboardLayout>
         <div className="p-6 text-center text-gray-500">
@@ -110,20 +127,13 @@ const BoardDetail = () => {
         </div>
       </DashboardLayout>
     );
-  }
 
-  // ✅ Render Board + Notes
   return (
     <DashboardLayout>
       <div className="p-6">
-        {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-semibold text-gray-800">{board.title}</h1>
           <p className="text-gray-500 mt-2">{board.description || 'No description provided.'}</p>
-
-          <p className="text-sm text-gray-400 mt-2">
-            Created on {new Date(board.createdAt).toLocaleDateString()}
-          </p>
         </div>
 
         {/* Notes Section */}
@@ -154,7 +164,6 @@ const BoardDetail = () => {
                     Created on {new Date(note.createdAt).toLocaleDateString()}
                   </p>
 
-                  {/* Edit/Delete Buttons */}
                   <div className="absolute top-3 right-3 flex gap-2">
                     <button
                       onClick={() => handleEdit(note)}
@@ -175,14 +184,12 @@ const BoardDetail = () => {
           )}
         </div>
 
-        {/* Create Note Modal */}
         <CreateNoteModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onCreate={handleCreateNote}
         />
 
-        {/* Edit Note Modal */}
         <EditNoteModal
           note={selectedNote}
           isOpen={isEditModalOpen}
