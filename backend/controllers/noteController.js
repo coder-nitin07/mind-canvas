@@ -180,6 +180,43 @@ const updateNote = async (req, res)=>{
     }
 };
 
+// Update Note Position
+const updateNotePosition = async (req, res)=>{
+    try {
+        const { x, y } = req.body;
+        const noteId = req.params.noteId;
+
+        if(typeof x !== 'number' || typeof y !== 'number'){
+            return res.status(400).json({ message: 'x and y (numbers) are required' });
+        }
+
+        // find note for permission check
+        const existing = await prisma.note.findUnique({
+            where: { id: noteId },
+            include: { board: true }
+        });
+
+        if(!existing){
+            return res.status(404).json({ message: 'Note not found' });
+        }
+
+        const updatedNote = await prisma.note.update({
+            where: { id: noteId },
+            data: { x, y },
+        });
+
+        // emit socket event to the board room
+        const io = res.app.get('id');
+        if(io && updateNote.boardId){
+            io.to(updateNote.boardId).emit('noteMoved ', updateNote);
+        }
+
+        return res.status(200).json({ message: 'Position Updated', note: updatedNote });
+    } catch (err) {
+        console.error('updateNotePosition error', err);
+        return res.status(500).json({ message: 'Something went wrong' });
+    }
+};
 
 // Delete a Note
 const deleteNote = async (req, res)=>{
@@ -226,4 +263,4 @@ const deleteNote = async (req, res)=>{
     }
 };
 
-module.exports = { createNote, getNoteDetails, getAllNotes, updateNote, deleteNote };
+module.exports = { createNote, getNoteDetails, getAllNotes, updateNote, updateNotePosition, deleteNote };
